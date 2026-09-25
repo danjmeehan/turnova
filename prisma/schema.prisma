@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model DailyTelemetry {
+  id             String   @id @default(cuid())
+  date           DateTime @unique
+  overnightHrv   Float?
+  sleepScore     Float?
+  restingHr      Float?
+  stress         Float?
+  sleepHours     Float?
+  /// "garmin" from the watch; "seed" for placeholders
+  source         String   @default("garmin")
+  weeklyMileage  Float?
+  lastRunSummary Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+/// Single-athlete Garmin Connect session tokens (never store email/password).
+model GarminToken {
+  id             String    @id @default("default")
+  oauth1Json     Json
+  oauth2Json     Json
+  displayName    String?
+  userProfilePk  Int?
+  pendingMfaJson Json?
+  lastSyncedAt   DateTime?
+  lastError      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+/// Gear locker from Garmin Connect (shoes, bikes, other kit).
+model GarminGear {
+  uuid            String    @id
+  displayName     String
+  customMakeModel String?
+  gearTypeName    String?
+  dateBegin       DateTime?
+  dateEnd         DateTime?
+  retired         Boolean   @default(false)
+  distanceMeters  Float     @default(0)
+  raw             Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+/// Single-athlete Strava OAuth tokens (local-first MVP).
+model StravaToken {
+  id           String   @id @default("default")
+  athleteId    Int
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  scope        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model StravaGear {
+  id              String   @id
+  name            String
+  nickname        String?
+  gearType        String
+  brandName       String?
+  modelName       String?
+  description     String?
+  primary         Boolean  @default(false)
+  retired         Boolean  @default(false)
+  distanceMeters  Float    @default(0)
+  raw             Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  activities      StravaActivity[]
+}
+
+model StravaActivity {
+  id                 BigInt    @id
+  athleteId          Int
+  name               String
+  sportType          String
+  type               String?
+  workoutType        Int?
+  isRace             Boolean   @default(false)
+  isTrainer          Boolean   @default(false)
+  isCommute          Boolean   @default(false)
+  startDate          DateTime
+  timezone           String?
+  distanceMeters     Float?
+  movingTimeSec      Int?
+  elapsedTimeSec     Int?
+  totalElevationGain Float?
+  averageSpeedMps    Float?
+  maxSpeedMps        Float?
+  averageHeartrate   Float?
+  maxHeartrate       Float?
+  averageCadence     Float?
+  kilojoules         Float?
+  sufferScore        Float?
+  calories           Float?
+  description        String?
+  gearId             String?
+  gear               StravaGear? @relation(fields: [gearId], references: [id])
+  mapSummaryPolyline String?
+  rawSummary         Json?
+  rawDetail          Json?
+  detailFetchedAt    DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([startDate])
+  @@index([sportType])
+  @@index([gearId])
+}
+
+/// One persisted training week (Monday-start). Days stored as JSON (7 objects).
+model WeeklyPlan {
+  id          String   @id @default(cuid())
+  weekStart   DateTime @unique
+  intent      String
+  weeksOut    Int?
+  rationale   String?
+  days        Json
+  generatedAt DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Single ongoing coach conversation (phone + desktop share this row on Fly).
+model ChatThread {
+  id        String   @id @default("default")
+  messages  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StravaSyncState {
+  id                   String    @id @default("default")
+  backfillComplete     Boolean   @default(false)
+  /// Epoch seconds cursor for walking history older via `before=` (null = start from now)
+  backfillBeforeEpoch  Int?
+  autoBackfillEnabled  Boolean   @default(false)
+  lastActivityStart    DateTime?
+  lastSyncedAt         DateTime?
+  activitiesSynced     Int       @default(0)
+  lastError            String?
+  rateLimitJson        Json?
+  rateLimitedUntil     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}

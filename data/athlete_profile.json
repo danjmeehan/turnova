@@ -1,0 +1,127 @@
+{
+  "name": "Dan",
+  "age": 46,
+  "location": "Hopewell Junction, NY 12533",
+  "background": {
+    "history": "Former competitive collegiate runner\n\nadvise as an elite-adjacent masters athlete, not a beginner",
+    "experience": "Advanced",
+    "work_life": "Started running again (post-college) in spring 2024. Weight has gradually dropped from about 189 to 164 in that time. No longer drinks alcohol."
+  },
+  "race_target": [
+    "Half Marathon"
+  ],
+  "goal_race": {
+    "id": "dutchess-county-classic-2026",
+    "name": "Dutchess County Classic",
+    "date": "2026-09-20",
+    "distance": "Half Marathon",
+    "location": "",
+    "goal_time": "",
+    "priority": "A",
+    "status": "complete",
+    "notes": "Fill in the specific next race. Use notes to capture target time rationale, course constraints, and planning decisions as you and the coach iterate.",
+    "primary": true,
+    "source": "manual",
+    "url": ""
+  },
+  "goal_races": [
+    {
+      "id": "dutchess-county-classic-2026",
+      "name": "Dutchess County Classic",
+      "date": "2026-09-20",
+      "distance": "Half Marathon",
+      "location": "",
+      "goal_time": "",
+      "priority": "A",
+      "status": "complete",
+      "notes": "Fill in the specific next race. Use notes to capture target time rationale, course constraints, and planning decisions as you and the coach iterate.",
+      "primary": true,
+      "source": "manual",
+      "url": ""
+    }
+  ],
+  "race_search": {
+    "radius_miles": 50,
+    "window_months": 3,
+    "event_types": [
+      "running_race",
+      "running_only",
+      "trail_race",
+      "ultra",
+      "open_course_trail"
+    ]
+  },
+  "goals": [
+    "Sustainable aerobic base",
+    "Controlled threshold development for half-marathon",
+    "Respect recovery constraints"
+  ],
+  "training_philosophy": "norwegian_threshold",
+  "historical_prs": {
+    "note": "",
+    "events": [
+      {
+        "event": "800m",
+        "period": "College",
+        "time": "1:52",
+        "notes": "College PR"
+      },
+      {
+        "event": "1500m",
+        "period": "College",
+        "time": "3:54",
+        "notes": "College PR"
+      },
+      {
+        "event": "8K",
+        "period": "College",
+        "time": "25:24",
+        "notes": "Cross country race at Lehigh University; college PR"
+      }
+    ]
+  },
+  "other_context": {
+    "note": "",
+    "items": []
+  },
+  "training_zones": {
+    "note": "Athlete-specific anchors for Norwegian intensity control; refine with lab/field testing or known paces",
+    "easy": {
+      "description": "Below LT1; truly conversational recovery/aerobic volume"
+    },
+    "lt1": {
+      "description": "Aerobic threshold; upper bound of easy / early steady work"
+    },
+    "lt2": {
+      "description": "Anaerobic / lactate threshold; primary controlled quality zone"
+    },
+    "vo2": {
+      "description": "Sparse, purposeful harder work when programmed"
+    }
+  },
+  "gear": {
+    "note": "Garmin Connect is the shoe/kit locker. Tag shoes on Strava activities when you want per-run attribution.",
+    "shoes": [
+      {
+        "uuid": "e2ef52c19cad41039aafbf9a3dc7a4cf",
+        "status": "Quality / Workouts",
+        "notes": "Often used for longer quality / race-pace work"
+      },
+      {
+        "uuid": "e41276432b884d9bb1787a4221ffc0fd",
+        "status": "Daily / Recovery",
+        "notes": ""
+      },
+      {
+        "uuid": "8ee91a927e194ba59211a617ae4af097",
+        "status": "Race",
+        "notes": ""
+      }
+    ]
+  },
+  "device_context": {
+    "watch": "Forerunner 265",
+    "note": "Optical HR susceptible to cadence lock; prefer pace/RPE over isolated max HR spikes",
+    "watchFromGarmin": "Forerunner 265"
+  }
+}

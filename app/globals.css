@@ -1,0 +1,147 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: coffee --default, retro;
+}
+
+:root,
+[data-theme="coffee"],
+[data-theme="retro"] {
+  --radius-selector: 0rem;
+  --radius-field: 0rem;
+  --radius-box: 0rem;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+  min-height: 100%;
+  background-color: var(--color-base-100);
+}
+
+.font-display {
+  font-family: var(--font-ibm-plex), ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-pixel {
+  font-family: var(--font-press-start), ui-monospace, monospace;
+  line-height: 1.5;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+}
+
+.bit-box {
+  border-radius: 0;
+  border: 3px solid var(--color-neutral);
+  box-shadow: 4px 4px 0 0 var(--color-neutral);
+}
+
+.bit-card {
+  border-radius: 0;
+  border-width: 3px;
+  border-style: solid;
+}
+
+.bit-btn {
+  border-radius: 0 !important;
+  border: 3px solid var(--color-neutral) !important;
+  box-shadow: 3px 3px 0 0 var(--color-neutral);
+}
+
+.bit-btn:active {
+  box-shadow: 0 0 0 0 var(--color-neutral);
+  transform: translate(3px, 3px);
+}
+
+.bit-badge {
+  border-radius: 0 !important;
+  border: 2px solid var(--color-neutral) !important;
+}
+
+.bit-field {
+  border-radius: 0 !important;
+  border: 3px solid var(--color-neutral) !important;
+}
+
+.btn-primary,
+.btn-outline,
+.btn-secondary,
+.btn-accent,
+.btn-error,
+.btn-success,
+.btn-warning,
+.btn-info {
+  border-radius: 0 !important;
+  border: 3px solid var(--color-neutral) !important;
+  box-shadow: 3px 3px 0 0 var(--color-neutral);
+}
+
+.btn-primary:active,
+.btn-outline:active,
+.btn-secondary:active,
+.btn-accent:active,
+.btn-error:active,
+.btn-success:active,
+.btn-warning:active,
+.btn-info:active {
+  box-shadow: 0 0 0 0 var(--color-neutral);
+  transform: translate(3px, 3px);
+}
+
+.btn-ghost,
+.btn-link {
+  border-radius: 0 !important;
+}
+
+.badge {
+  border-radius: 0 !important;
+}
+
+.badge.prompt-chip {
+  border-radius: 9999px !important;
+}
+
+.input-bordered,
+.textarea-bordered,
+.select-bordered {
+  border-radius: 0 !important;
+  border: 3px solid var(--color-neutral) !important;
+}
+
+.alert,
+.card,
+.dropdown-content,
+.modal-box {
+  border-radius: 0 !important;
+  border: 3px solid var(--color-neutral);
+  box-shadow: 4px 4px 0 0 var(--color-neutral);
+}
+
+.chat-bubble {
+  border-radius: 0 !important;
+  border: 3px solid var(--color-neutral);
+}
+
+.chat-bubble:before {
+  display: none;
+}
+
+.avatar > div,
+.avatar img {
+  border-radius: 0 !important;
+}
+
+.toggle {
+  border-radius: 0 !important;
+}
+
+.toggle:before {
+  border-radius: 0 !important;
+}
+
+* {
+  box-sizing: border-box;
+}
