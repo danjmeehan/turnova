@@ -178,7 +178,7 @@ function stravaSection(strava: StravaContextPayload): string {
       races: strava.races,
       recentActivities: strava.recentActivities,
       olderHistorySample: strava.olderHistorySample,
-      note: "races is the COMPLETE list of Strava activities marked as races (newest first) — use it for any race inventory question. recentActivities is only the newest window (with mileSplits/laps when hasDetail=true). olderHistorySample is a sparse sample of older non-prioritized activities. Do not invent races or splits missing from these arrays.",
+      note: "races is the COMPLETE list of Strava activities marked as races (newest first), including mileSplits and laps when hasDetail is true, even for races outside the recent window. recentActivities is only the newest window (with mileSplits/laps when hasDetail=true). olderHistorySample is a sparse sample of older non-prioritized activities. Do not invent races or splits missing from these arrays.",
     },
     null,
     2,

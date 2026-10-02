@@ -176,25 +176,45 @@ export async function runDetailFetchChunk(options?: {
     };
   }
 
-  const recent = await prisma.stravaActivity.findMany({
-    orderBy: { startDate: "desc" },
-    take: recentWindow,
-    select: {
-      id: true,
-      workoutType: true,
-      isRace: true,
-      detailFetchedAt: true,
-      startDate: true,
-    },
-  });
+  const [recent, racesMissingDetail] = await Promise.all([
+    prisma.stravaActivity.findMany({
+      orderBy: { startDate: "desc" },
+      take: recentWindow,
+      select: {
+        id: true,
+        workoutType: true,
+        isRace: true,
+        detailFetchedAt: true,
+        startDate: true,
+      },
+    }),
+    prisma.stravaActivity.findMany({
+      where: { isRace: true, detailFetchedAt: null },
+      orderBy: { startDate: "desc" },
+      select: {
+        id: true,
+        workoutType: true,
+        isRace: true,
+        detailFetchedAt: true,
+        startDate: true,
+      },
+    }),
+  ]);
 
-  const missing = recent
+  const candidates = new Map<string, (typeof recent)[number]>();
+  for (const activity of [...racesMissingDetail, ...recent]) {
+    candidates.set(activity.id.toString(), activity);
+  }
+
+  const missing = [...candidates.values()]
     .filter((a) => !a.detailFetchedAt)
     .sort((a, b) => {
-      // Workouts / races first, then recency (already mostly recent)
+      // Historic races first, then workouts, then recency.
       const score = (x: typeof a) =>
-        (x.isRace ? 2 : 0) + (x.workoutType === 3 ? 2 : 0) + (x.workoutType === 2 ? 1 : 0);
-      return score(b) - score(a);
+        (x.isRace ? 4 : 0) + (x.workoutType === 3 ? 2 : 0) + (x.workoutType === 2 ? 1 : 0);
+      const byScore = score(b) - score(a);
+      if (byScore !== 0) return byScore;
+      return b.startDate.getTime() - a.startDate.getTime();
     });
 
   for (const activity of missing) {
@@ -240,12 +260,23 @@ export async function runDetailFetchChunk(options?: {
 }
 
 async function countMissingDetails(recentWindow: number): Promise<number> {
-  const recent = await prisma.stravaActivity.findMany({
-    orderBy: { startDate: "desc" },
-    take: recentWindow,
-    select: { detailFetchedAt: true },
-  });
-  return recent.filter((a) => !a.detailFetchedAt).length;
+  const [recent, racesMissingDetail] = await Promise.all([
+    prisma.stravaActivity.findMany({
+      orderBy: { startDate: "desc" },
+      take: recentWindow,
+      select: { id: true, detailFetchedAt: true },
+    }),
+    prisma.stravaActivity.findMany({
+      where: { isRace: true, detailFetchedAt: null },
+      select: { id: true },
+    }),
+  ]);
+  const ids = new Set<string>();
+  for (const activity of recent) {
+    if (!activity.detailFetchedAt) ids.add(activity.id.toString());
+  }
+  for (const race of racesMissingDetail) ids.add(race.id.toString());
+  return ids.size;
 }
 
 export function coachSplitsFromRawDetail(raw: unknown): {

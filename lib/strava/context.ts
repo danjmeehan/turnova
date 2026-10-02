@@ -115,6 +115,23 @@ export type StravaContextPayload = {
     elevationM: number | null;
     avgHr: number | null;
     hasDetail: boolean;
+    mileSplits: Array<{
+      n: number;
+      miles: number;
+      pace: string | null;
+      elevM: number | null;
+      avgHr: number | null;
+    }>;
+    laps: Array<{
+      n: number;
+      name: string | null;
+      miles: number | null;
+      movingSec: number | null;
+      pace: string | null;
+      avgHr: number | null;
+      maxHr: number | null;
+      avgCadence: number | null;
+    }>;
   }>;
   /** Older history compressed for prompt size (no splits). */
   olderHistorySample: Array<{
@@ -260,20 +277,29 @@ export async function buildStravaContextPayload(): Promise<StravaContextPayload>
   });
 
   // Full race catalog — do not sample. Newest first.
+  // Mile splits travel with the race even when it is outside the recent window.
   const races = activities
     .filter((a) => a.isRace)
-    .map((a) => ({
-      id: a.id.toString(),
-      date: a.startDate.toISOString().slice(0, 10),
-      name: a.name,
-      sportType: a.sportType,
-      miles: metersToMiles(a.distanceMeters),
-      movingTime: formatDuration(a.movingTimeSec),
-      pace: formatPace(a.distanceMeters, a.movingTimeSec),
-      elevationM: a.totalElevationGain,
-      avgHr: a.averageHeartrate,
-      hasDetail: Boolean(a.detailFetchedAt && a.rawDetail),
-    }));
+    .map((a) => {
+      const hasDetail = Boolean(a.detailFetchedAt && a.rawDetail);
+      const { mileSplits, laps } = hasDetail
+        ? coachSplitsFromRawDetail(a.rawDetail)
+        : { mileSplits: [], laps: [] };
+      return {
+        id: a.id.toString(),
+        date: a.startDate.toISOString().slice(0, 10),
+        name: a.name,
+        sportType: a.sportType,
+        miles: metersToMiles(a.distanceMeters),
+        movingTime: formatDuration(a.movingTimeSec),
+        pace: formatPace(a.distanceMeters, a.movingTimeSec),
+        elevationM: a.totalElevationGain,
+        avgHr: a.averageHeartrate,
+        hasDetail,
+        mileSplits,
+        laps,
+      };
+    });
 
   return {
     connected: true,

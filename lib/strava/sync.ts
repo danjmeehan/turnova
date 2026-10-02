@@ -343,13 +343,19 @@ export async function runStravaSyncChunk(options?: {
       where: { id: SYNC_ID },
     });
 
-    const recentMissingSplits = (
-      await prisma.stravaActivity.findMany({
+    const [recentMissingRows, racesMissingDetail] = await Promise.all([
+      prisma.stravaActivity.findMany({
         orderBy: { startDate: "desc" },
         take: 40,
         select: { detailFetchedAt: true },
-      })
-    ).filter((a) => !a.detailFetchedAt).length;
+      }),
+      prisma.stravaActivity.count({
+        where: { isRace: true, detailFetchedAt: null },
+      }),
+    ]);
+    const recentMissingSplits =
+      recentMissingRows.filter((a) => !a.detailFetchedAt).length +
+      racesMissingDetail;
 
     await prisma.stravaSyncState.update({
       where: { id: SYNC_ID },
