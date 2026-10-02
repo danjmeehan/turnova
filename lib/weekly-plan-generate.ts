@@ -82,6 +82,7 @@ export async function generateWeeklyPlan(
     "Do not invent overnight HRV, sleep score, sleep hours, resting HR, or stress after the recovery feed ends.",
     "Fill every day. Rest days are valid. Use athlete zone language (easy / LT1 / LT2 / VO2).",
     "strength is an optional same-day lift after the run on that date. kind, miles, and intensity stay the run. Set strength to null when not programming a lift, and always null on rest days.",
+    "nutrition lists pantry items that fit that day. Use the exact pantry name. notes is one or two sentences on timing and why, not the full description. Use an empty array when none fit, and always on rest days. Do not invent supplements that are not in the pantry.",
     "Supporting strength 1–2 days/week is typical. Skip or keep very light on race week and double-threshold days. Do not invent gym equipment; keep notes generic unless the athlete profile names gear.",
     "Use the Local weather block for outdoor vs indoor placement, heat/ice caution, and rain swaps. Do not invent weather past the last forecast date.",
     "days MUST contain exactly these 7 dates in order, with matching weekday labels.",
@@ -154,11 +155,28 @@ export async function generateWeeklyPlan(
     throw new PlanValidationError(mismatch);
   }
 
+  const pantryNames = new Map(
+    profile.pantry
+      .filter((item) => item.name.trim())
+      .map((item) => [item.name.trim().toLowerCase(), item.name.trim()]),
+  );
+  const days = object.days.map((day) => {
+    const seen = new Set<string>();
+    const nutrition = (day.nutrition ?? []).flatMap((item) => {
+      const canonical = pantryNames.get(item.name.trim().toLowerCase());
+      const notes = item.notes.trim();
+      if (!canonical || !notes || seen.has(canonical)) return [];
+      seen.add(canonical);
+      return [{ name: canonical, notes }];
+    });
+    return { ...day, nutrition };
+  });
+
   return upsertWeeklyPlan({
     weekStart,
     intent: object.intent,
     weeksOut,
     rationale: object.rationale,
-    days: object.days,
+    days,
   });
 }

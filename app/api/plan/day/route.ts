@@ -1,4 +1,4 @@
-import { streamText } from "ai";
+import { generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import { loadAthleteProfile } from "@/lib/athlete-profile";
@@ -32,6 +32,30 @@ const WEEKDAY_FULL: Record<string, string> = {
 
 const bodySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+const dayBriefSchema = z.object({
+  brief: z
+    .string()
+    .describe(
+      "2 to 4 short paragraphs of plain-text coaching for this day only",
+    ),
+  nutrition: z
+    .array(
+      z.object({
+        name: z
+          .string()
+          .describe("Exact name of a pantry item that fits this session"),
+        notes: z
+          .string()
+          .describe(
+            "One or two sentences on timing and why for this session, not the full pantry description",
+          ),
+      }),
+    )
+    .describe(
+      "Pantry items that fit this session. Empty when none fit. Never invent a product.",
+    ),
 });
 
 export async function POST(req: Request) {
@@ -73,11 +97,17 @@ export async function POST(req: Request) {
     return Response.json({ error: message }, { status: 500 });
   }
 
+  const profile = loadAthleteProfile();
+  const pantryNames = new Map(
+    profile.pantry
+      .filter((item) => item.name.trim())
+      .map((item) => [item.name.trim().toLowerCase(), item.name.trim()]),
+  );
   const dateWeekView = await getWeeklyPlanView(mondayOfWeek(date));
   const dateWeekDay = dateWeekView.days.find((d) => d.date === date);
   let lastForecastDate: string | null = null;
   try {
-    const weather = await getWeatherContext(loadAthleteProfile().location);
+    const weather = await getWeatherContext(profile.location);
     lastForecastDate = weather?.lastForecastDate ?? null;
   } catch {
     lastForecastDate = null;
@@ -107,7 +137,8 @@ export async function POST(req: Request) {
   const prompt = [
     `Coach ${weekday} ${date} only. Do not rewrite other days.`,
     "The card already shows kind, title, mileage, duration, intensity, and session notes. Do not restate those or recap the prescription in the opening.",
-    "Write 2 to 4 short paragraphs: how to execute the session, why it sits in this week, and the lift if one is assigned.",
+    "Write 2 to 4 short paragraphs in brief: how to execute the session, why it sits in this week, and the lift if one is assigned.",
+    "In brief, name which pantry item or items fit this session. If none fit, say so in one sentence. Also fill nutrition with those same items: notes is one or two sentences on timing and why, not the full stored description, and name is the exact pantry name. If none fit, leave nutrition empty. Do not invent supplements that are not in the pantry.",
     hasActuals
       ? "Compare Strava actuals for that date with the prescription."
       : "Do not mention Strava, actuals, that the day is upcoming, or that there is nothing to compare.",
@@ -117,11 +148,28 @@ export async function POST(req: Request) {
     "Never mention the plan strip, Regenerate, stored prescriptions, or missing calendar data.",
   ].join(" ");
 
-  const result = streamText({
-    model: google("gemini-flash-latest"),
-    system: systemPrompt,
-    prompt,
-  });
-
-  return result.toTextStreamResponse();
+  try {
+    const { object } = await generateObject({
+      model: google("gemini-flash-latest"),
+      schema: dayBriefSchema,
+      schemaName: "DayBrief",
+      schemaDescription:
+        "Plain-text day brief plus pantry items that fit this session.",
+      system: systemPrompt,
+      prompt,
+    });
+    const seen = new Set<string>();
+    const nutrition = object.nutrition.flatMap((item) => {
+      const canonical = pantryNames.get(item.name.trim().toLowerCase());
+      const notes = item.notes.trim();
+      if (!canonical || !notes || seen.has(canonical)) return [];
+      seen.add(canonical);
+      return [{ name: canonical, notes }];
+    });
+    return Response.json({ brief: object.brief, nutrition });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Brief failed";
+    console.error("[api/plan/day]", err);
+    return Response.json({ error: message }, { status: 500 });
+  }
 }

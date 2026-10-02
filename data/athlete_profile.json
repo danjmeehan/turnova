@@ -99,13 +99,27 @@
       "description": "Sparse, purposeful harder work when programmed"
     }
   },
+  "pantry": [
+    {
+      "name": "Vital Proteins Collagen Peptides",
+      "description": "Muscle tissue has a rich vascular network, so when you drink a whey shake after a workout, blood immediately rushes amino acids into your muscles. Tendons and ligaments are largely avascular—they have virtually no direct blood flow. They receive nutrients through passive diffusion. When you run or perform calf raises, your tendons act like sponges: mechanical tension squeezes fluid out, and when you relax, it draws fluid and dissolved nutrients back in. The catch is the timing. Taking collagen after a workout—the way you take whey protein—does almost nothing for your tendons because the mechanical pumping action has already stopped."
+    },
+    {
+      "name": "Momentous Whey Protein Isolate",
+      "description": "Knocking back twenty-five to thirty grams of high-leucine whey isolate within forty-five minutes of finishing your runs and strength sessions is critical for repairing muscle damage, stimulating muscle tone, and accelerating collagen repair."
+    },
+    {
+      "name": "Skratch Labs Hydration Sport Mix",
+      "description": "A hydration mix serves two very specific physiological purposes: restoring sodium lost in sweat to maintain blood plasma volume, and providing a steady trickle of easily digestible carbohydrates to spare muscle glycogen. Used for: threshold days, long runs, and extreme heat/humidity."
+    }
+  ],
   "gear": {
     "note": "Garmin Connect is the shoe/kit locker. Tag shoes on Strava activities when you want per-run attribution.",
     "shoes": [
       {
-        "uuid": "e2ef52c19cad41039aafbf9a3dc7a4cf",
-        "status": "Quality / Workouts",
-        "notes": "Often used for longer quality / race-pace work"
+        "uuid": "08e6eed59c7748b6bd0e3a3968b5b829",
+        "status": "",
+        "notes": ""
       },
       {
         "uuid": "e41276432b884d9bb1787a4221ffc0fd",
@@ -116,6 +130,11 @@
         "uuid": "8ee91a927e194ba59211a617ae4af097",
         "status": "Race",
         "notes": ""
+      },
+      {
+        "uuid": "e2ef52c19cad41039aafbf9a3dc7a4cf",
+        "status": "Quality / Workouts",
+        "notes": "Often used for longer quality / race-pace work"
       }
     ]
   },

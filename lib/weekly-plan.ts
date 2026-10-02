@@ -89,6 +89,21 @@ export const planDaySchema = z.object({
     .describe(
       "Optional same-day lift after the run; null when not programming strength. Never a substitute for the run. Null on rest days.",
     ),
+  nutrition: z
+    .array(
+      z.object({
+        name: z.string().describe("Exact pantry item name"),
+        notes: z
+          .string()
+          .describe(
+            "One or two sentences on timing and why for this day, not the full pantry description",
+          ),
+      }),
+    )
+    .default([])
+    .describe(
+      "Pantry items that fit this day. Empty when none fit, including rest days. Never invent a product.",
+    ),
 });
 
 export const weeklyPlanGenerateSchema = z.object({
@@ -390,6 +405,7 @@ export function compactPlanForPrompt(plan: StoredWeeklyPlan | null): unknown {
       intensity: d.intensity,
       sessionNotes: d.sessionNotes,
       strength: d.strength ?? null,
+      nutrition: d.nutrition ?? [],
     })),
   };
 }

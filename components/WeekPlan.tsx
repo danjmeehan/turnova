@@ -14,6 +14,16 @@ import {
 } from "@/lib/chat-guidance";
 import { RunnerLogo } from "@/components/RunnerLogo";
 
+type DayNutrition = {
+  name: string;
+  notes: string;
+};
+
+type CachedDayBrief = {
+  brief: string;
+  nutrition: DayNutrition[];
+};
+
 type PlanKind =
   | "easy"
   | "lt1"
@@ -46,6 +56,7 @@ type PlanDay = {
     durationMin: number | null;
     notes: string;
   } | null;
+  nutrition?: DayNutrition[];
 };
 
 type WeatherIconKind =
@@ -188,6 +199,11 @@ function StatusOverlay({ day }: { day: PlanDayView }) {
     return <span className={badge}>{inner}</span>;
   }
   return <span className="text-sm font-medium text-base-content/80">{inner}</span>;
+}
+
+function showsCardStatus(day: PlanDayView): boolean {
+  if (day.status === "rest_ok") return true;
+  return overlayLine(day) !== "—";
 }
 
 function prescribedLine(day: PlanDayView): string {
@@ -819,12 +835,14 @@ function PlanCard({
 function DayBriefSheet({
   day,
   brief,
+  nutrition,
   loading,
   error,
   onClose,
 }: {
   day: PlanDayView;
   brief: string;
+  nutrition: DayNutrition[];
   loading: boolean;
   error: string | null;
   onClose: () => void;
@@ -893,9 +911,26 @@ function DayBriefSheet({
                 ) : null}
               </div>
             ) : null}
-            <p className="mt-1 flex items-center">
-              <StatusOverlay day={day} />
-            </p>
+            {(prescribed?.nutrition?.length ?? 0) > 0 ? (
+              <div className="mt-2 space-y-1">
+                <p className="text-sm font-medium text-base-content">Nutrition</p>
+                <ul className="list-disc space-y-1 pl-4 text-sm leading-relaxed text-base-content/80">
+                  {prescribed?.nutrition?.map((item) => (
+                    <li key={item.name}>
+                      <span className="font-medium text-base-content">
+                        {item.name}.
+                      </span>{" "}
+                      {item.notes}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {showsCardStatus(day) ? (
+              <p className="mt-1 flex items-center">
+                <StatusOverlay day={day} />
+              </p>
+            ) : null}
           </div>
           <button type="button" className="btn btn-ghost btn-sm shrink-0" onClick={onClose}>
             Close
@@ -939,8 +974,11 @@ export function WeekPlan() {
   const [generatingWeek, setGeneratingWeek] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<PlanDayView | null>(null);
   const [cardExpanded, setCardExpanded] = useState(true);
-  const [briefByDate, setBriefByDate] = useState<Record<string, string>>({});
+  const [briefByDate, setBriefByDate] = useState<
+    Record<string, CachedDayBrief>
+  >({});
   const [briefText, setBriefText] = useState("");
+  const [nutrition, setNutrition] = useState<DayNutrition[]>([]);
   const [briefLoading, setBriefLoading] = useState(false);
   const [briefError, setBriefError] = useState<string | null>(null);
 
@@ -1049,13 +1087,15 @@ export function WeekPlan() {
   useEffect(() => {
     if (!selectedDate) return;
     if (cachedBrief) {
-      setBriefText(cachedBrief);
+      setBriefText(cachedBrief.brief);
+      setNutrition(cachedBrief.nutrition);
       setBriefLoading(false);
       setBriefError(null);
       return;
     }
     const ac = new AbortController();
     setBriefText("");
+    setNutrition([]);
     setBriefError(null);
     setBriefLoading(true);
     void (async () => {
@@ -1066,29 +1106,28 @@ export function WeekPlan() {
           body: JSON.stringify({ date: selectedDate }),
           signal: ac.signal,
         });
+        const data = (await res.json().catch(() => ({}))) as {
+          brief?: string;
+          nutrition?: DayNutrition[];
+          error?: string;
+        };
         if (!res.ok) {
-          const data = (await res.json().catch(() => ({}))) as {
-            error?: string;
-          };
           throw new Error(data.error || `Brief failed (${res.status})`);
         }
-        if (!res.body) throw new Error("Brief failed");
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let raw = "";
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          raw += decoder.decode(value, { stream: true });
-          if (ac.signal.aborted) return;
-          setBriefText(toConversationalPlainText(raw));
-          setBriefLoading(false);
-        }
-        raw += decoder.decode();
-        const cleaned = toConversationalPlainText(raw);
         if (ac.signal.aborted) return;
+        const cleaned = toConversationalPlainText(data.brief ?? "");
+        const lines = (data.nutrition ?? [])
+          .map((item) => ({
+            name: item.name.trim(),
+            notes: toConversationalPlainText(item.notes ?? ""),
+          }))
+          .filter((item) => item.name && item.notes);
         setBriefText(cleaned);
-        setBriefByDate((prev) => ({ ...prev, [selectedDate]: cleaned }));
+        setNutrition(lines);
+        setBriefByDate((prev) => ({
+          ...prev,
+          [selectedDate]: { brief: cleaned, nutrition: lines },
+        }));
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") return;
         setBriefError(e instanceof Error ? e.message : "Brief failed");
@@ -1210,6 +1249,7 @@ export function WeekPlan() {
         <DayBriefSheet
           day={selectedDay}
           brief={briefText}
+          nutrition={nutrition}
           loading={briefLoading}
           error={briefError}
           onClose={() => setSelectedDay(null)}

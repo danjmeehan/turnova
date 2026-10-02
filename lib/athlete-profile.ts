@@ -86,6 +86,30 @@ export const emptyShoe = (): z.infer<typeof shoeSchema> => ({
   notes: "",
 });
 
+const pantryItemSchema = z.object({
+  name: z.string(),
+  description: z.string().default(""),
+});
+
+/** Used only when an older profile has no pantry key. An empty array is kept. */
+const SEED_PANTRY: z.infer<typeof pantryItemSchema>[] = [
+  {
+    name: "Vital Proteins Collagen Peptides",
+    description:
+      "Muscle tissue has a rich vascular network, so when you drink a whey shake after a workout, blood immediately rushes amino acids into your muscles. Tendons and ligaments are largely avascular—they have virtually no direct blood flow. They receive nutrients through passive diffusion. When you run or perform calf raises, your tendons act like sponges: mechanical tension squeezes fluid out, and when you relax, it draws fluid and dissolved nutrients back in. The catch is the timing. Taking collagen after a workout—the way you take whey protein—does almost nothing for your tendons because the mechanical pumping action has already stopped.",
+  },
+  {
+    name: "Momentous Whey Protein Isolate",
+    description:
+      "Knocking back twenty-five to thirty grams of high-leucine whey isolate within forty-five minutes of finishing your runs and strength sessions is critical for repairing muscle damage, stimulating muscle tone, and accelerating collagen repair.",
+  },
+  {
+    name: "Skratch Labs Hydration Sport Mix",
+    description:
+      "A hydration mix serves two very specific physiological purposes: restoring sodium lost in sweat to maintain blood plasma volume, and providing a steady trickle of easily digestible carbohydrates to spare muscle glycogen. Used for: threshold days, long runs, and extreme heat/humidity.",
+  },
+];
+
 const gearSchema = z.object({
   note: z.string().default(""),
   shoes: z.array(shoeSchema).default([]),
@@ -201,9 +225,18 @@ function migrateHistoricalPrs(input: unknown): unknown {
   };
 }
 
+function migratePantry(input: unknown): unknown {
+  if (!input || typeof input !== "object") return input;
+  const obj = input as Record<string, unknown>;
+  if ("pantry" in obj) return obj;
+  return { ...obj, pantry: SEED_PANTRY };
+}
+
 function migrateAthleteProfileInput(input: unknown): unknown {
-  return migrateHistoricalPrs(
-    migrateAthleteContext(migrateRaceTarget(migrateGoalRacesInput(input))),
+  return migratePantry(
+    migrateHistoricalPrs(
+      migrateAthleteContext(migrateRaceTarget(migrateGoalRacesInput(input))),
+    ),
   );
 }
 
@@ -255,6 +288,8 @@ export const athleteProfileSchema = z.preprocess(
     lt2: zoneSchema,
     vo2: zoneSchema,
   }),
+  /** Supplements and mixes on hand. The day brief suggests from this list. */
+  pantry: z.array(pantryItemSchema).default([]),
   /**
    * Garmin locker is the catalog (injected separately as garminGear).
    * These rows are role/notes overlay keyed by Garmin uuid.
@@ -275,6 +310,7 @@ export const athleteProfileSchema = z.preprocess(
 
 export type AthleteProfile = z.infer<typeof athleteProfileSchema>;
 export type PrEvent = z.infer<typeof prEventSchema>;
+export type PantryItem = z.infer<typeof pantryItemSchema>;
 export type ProfileShoe = z.infer<typeof shoeSchema>;
 
 function bundledProfilePath(): string {

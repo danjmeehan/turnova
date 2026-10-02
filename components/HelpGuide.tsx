@@ -190,6 +190,12 @@ export function HelpGuide() {
           coach uses these instead of generic charts.
         </p>
         <p>
+          <strong className="font-semibold text-base-content">Pantry.</strong>{" "}
+          Supplements and mixes you keep at home. Type each name and a note
+          about when to use it. The day brief picks from that list and does
+          not invent products you have not added.
+        </p>
+        <p>
           <strong className="font-semibold text-base-content">
             Shoes / gear.
           </strong>{" "}

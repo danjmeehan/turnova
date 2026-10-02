@@ -69,6 +69,10 @@ function emptyPr(): PrEvent {
   return { event: "", period: "", time: "", notes: "" };
 }
 
+function emptyPantryItem() {
+  return { name: "", description: "" };
+}
+
 function DistanceFocusField({
   value,
   onChange,
@@ -1068,6 +1072,91 @@ export function ProfileEditor({ open, onClose }: Props) {
                       />
                     </div>
                   ))}
+                </ProfileSection>
+
+                <ProfileSection
+                  title="Pantry"
+                  action={
+                    <button
+                      type="button"
+                      className={TEXT_ACTION}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        update("pantry", [emptyPantryItem(), ...profile.pantry]);
+                      }}
+                    >
+                      Add item
+                    </button>
+                  }
+                >
+                  <p className={PROSE}>
+                    What you keep at home. The day brief suggests from this
+                    list.
+                  </p>
+                  {profile.pantry.length === 0 && (
+                    <p className={EMPTY}>No pantry items yet.</p>
+                  )}
+                  <ul>
+                    {profile.pantry.map((item, index) => (
+                      <li key={index} className={ARTICLE}>
+                        <div className="flex items-baseline justify-between gap-3">
+                          <p className="font-display text-sm font-medium">
+                            {item.name.trim() || `Item ${index + 1}`}
+                          </p>
+                          <button
+                            type="button"
+                            className={TEXT_ACTION}
+                            aria-label={`Remove pantry item ${index + 1}`}
+                            onClick={() =>
+                              update(
+                                "pantry",
+                                profile.pantry.filter((_, i) => i !== index),
+                              )
+                            }
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <div>
+                          <FieldLabel htmlFor={`pantry-name-${index}`}>
+                            Name
+                          </FieldLabel>
+                          <input
+                            id={`pantry-name-${index}`}
+                            className={FIELD}
+                            value={item.name}
+                            onChange={(e) => {
+                              const pantry = [...profile.pantry];
+                              pantry[index] = {
+                                ...item,
+                                name: e.target.value,
+                              };
+                              update("pantry", pantry);
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <FieldLabel htmlFor={`pantry-description-${index}`}>
+                            Description
+                          </FieldLabel>
+                          <textarea
+                            id={`pantry-description-${index}`}
+                            rows={5}
+                            className={TEXTAREA_TALL}
+                            value={item.description}
+                            onChange={(e) => {
+                              const pantry = [...profile.pantry];
+                              pantry[index] = {
+                                ...item,
+                                description: e.target.value,
+                              };
+                              update("pantry", pantry);
+                            }}
+                          />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 </ProfileSection>
 
                 <ProfileSection title="Shoes / gear">
